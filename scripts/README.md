@@ -31,11 +31,6 @@ $ ./scripts/test_algo_mac python-algo/
 $ ./scripts/test_algo_mac java-algo/algo-target/
 $ ./scripts/test_algo_mac java-algo/algo-target/ ~/Downloads/my_replay.replay
 ```
-On Windows:
-```
-> .\scripts\test_algo_windows.exe .\rust-algo\algo-target\
-> .\scripts\test_algo_windows.exe .\rust-algo\algo-target\ C:\Users\Justin\Downloads\my_replay.replay
-```
 
 #### Running local matches
 
