@@ -28,6 +28,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         # This is a good place to do initial setup
         global my_edges
         my_edges = []
+        gamelib.debug_write("Setting up edges")
         for x in range(14):
             my_edges.append([int(x), int(13 - x)])
         for x in range(14):
@@ -45,6 +46,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  # Comment or remove this line to enable warnings.
         self.starter_strategy(game_state)
+        gamelib.debug_write("Submitted Turn")
         game_state.submit_turn()
 
     """
@@ -59,6 +61,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if(game_state.turn_number == 0):
             self.opening(game_state)
         self.build_defences(game_state)
+        gamelib.debug_write("Finished Defenses")
         self.build_attack(game_state)
 
     def build_defences(self, game_state):
@@ -83,18 +86,22 @@ class AlgoStrategy(gamelib.AlgoCore):
         open_locations = []
         necessary = []
         open_edges = []
+        gamelib.debug_write("Filtering my_edges")
         for start in my_edges:
             if game_state.can_spawn(SCOUT, start):
                 open_edges.append(start)
+        gamelib.debug_write("Preventing blocking")
         for start in open_edges:
             for local in game_state.find_path_to_edge((self.least_damage_spawn_location(game_state, open_edges))):
                 necessary.append(locals)
+        gamelib.debug_write("Assembing my board")
         for x in range(28):
             for y in range(14):
                 if game_state.can_spawn(TURRET, [x, y]):
                     if necessary.count([x,y]) == 0:
                         open_locations.append([x, y])
         damage_outputs = []
+        gamelib.debug_write("Calcing damages")
         for location in open_locations:
             damage_outputs.append(0)
             for target in vuln_locations:
@@ -105,9 +112,15 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_spawn(TURRET, open_locations[damage_outputs.index(max(damage_outputs))])
             damage_outputs.remove(max(damage_outputs))
             open_locations.pop(damage_outputs.index(max(damage_outputs)))
+        gamelib.debug_write("Finished placement")
 
     def build_attack(self, game_state):
-        chosen_location = self.least_damage_spawn_location(game_state, my_edges)
+        open_edges = []
+        gamelib.debug_write("Filtering my_edges")
+        for start in my_edges:
+            if game_state.can_spawn(SCOUT, start):
+                open_edges.append(start)
+        chosen_location = self.least_damage_spawn_location(game_state, open_edges)
         while game_state.get_resource(MP) > 0:
             game_state.attempt_spawn(SCOUT, chosen_location)
 
@@ -178,3 +191,4 @@ enemy_edges = [[0, 14], [1, 15], [2, 16], [3, 17], [4, 18], [5, 19], [6, 20], [7
 if __name__ == "__main__":
     algo = AlgoStrategy()
     algo.start()
+
