@@ -54,7 +54,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         game_state = gamelib.GameState(self.config, turn_state)
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
-        game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
+        game_state.suppress_warnings(True)  # Comment or remove this line to enable warnings.
 
         self.greedy_strategy(game_state)
         game_state.submit_turn()
@@ -83,7 +83,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         '''
 
         vulnerable_locations = []
-        likely_starts = self.enemy_least_damage(game_state)
+        likely_starts = self.least_damage_spawn(game_state)
 
         for start in likely_starts:
             for location in game_state.find_path_to_edge(start):
@@ -91,19 +91,18 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     # Finish this function later
 
-    def enemy_least_damage(self, game_state):
-        damages = []
+    def least_damage_spawn(self, game_state, myself: bool = True):
         possible_starts = []
-
-        for start in self.get_edges(game_state, your_edges = False):
+        for start in self.get_edges(game_state, myself=myself):
             if not game_state.contains_stationary_unit(start):
                 possible_starts.append(start)
 
+        damages = []
         for location in possible_starts:
             path = game_state.find_path_to_edge(location)
             particular_damage = 0
             for path_location in path:
-                for attacker in game_state.get_attackers(path_location, 1):
+                for attacker in game_state.get_attackers(path_location, not myself):
                     if attacker.attackRange == 2.5:
                         particular_damage += 5
                     if attacker.attackRange == 3.5:
@@ -119,7 +118,7 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         return best_starts
 
-    def get_edges(self, game_state, your_edges: bool = True):
+    def get_edges(self, game_state, myself: bool = True):
         '''
         Function to get each player's edges
 
@@ -131,12 +130,13 @@ class AlgoStrategy(gamelib.AlgoCore):
                 Returns: List of edge coordinates
         '''
 
-        if your_edges:
+        if myself:
             edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
         else:
             edges = game_state.game_map.get_edge_locations(game_state.game_map.TOP_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.TOP_RIGHT)
 
         return edges
+
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
