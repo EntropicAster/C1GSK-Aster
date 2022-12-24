@@ -54,11 +54,44 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         game_state = gamelib.GameState(self.config, turn_state)
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
-        # game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
+        game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        self.get_edges(game_state, your_edges=True)
-        self.get_edges(game_state, your_edges=False)
+        self.greedy_strategy(game_state)
         game_state.submit_turn()
+
+    def greedy_strategy(self, game_state):
+        '''
+        Strategy that tries to make the best decision on each turn with no look-ahead
+
+                Params:
+                    game_state (game_state): current game state
+        '''
+
+        if game_state.turn_number == 0:
+
+            self.opening(game_state)
+
+        self.build_defences(game_state)
+        gamelib.debug("Finished Defenses")
+
+        self.build_attack(game_state)
+        gamelib.debug("Finished Attack")
+        
+    def build_defenses(self, game_state):
+        '''
+        Places turrets to protect most vulnerable paths
+        '''
+
+        vulnerable_locations = []
+        likely_starts = self.enemy_least_damage(game_state)
+
+        for start in likely_starts:
+            for location in game_state.find_path_to_edge(start):
+                vulnerable_locations.append(location)
+
+    # Finish this function later
+
+
 
     def get_edges(self, game_state, your_edges: bool = True):
         '''
@@ -78,7 +111,6 @@ class AlgoStrategy(gamelib.AlgoCore):
             edges = game_state.game_map.get_edge_locations(game_state.game_map.TOP_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.TOP_RIGHT)
 
         return edges
-
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
