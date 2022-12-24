@@ -64,13 +64,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         '''
         Function to get each player's edges
 
-            parameters:
-                self
-                game_state: current game state
-                player: bool that is true if you want your own edges and false if you want your opponent's
+                Params:
+                    self (self): self
+                    game_state (game_state): current game state
+                    your_edges (bool): bool that is true if you want your own edges and false if you want your opponent's
 
-            returns:
-                List of edge coordinates
+                Returns: List of edge coordinates
         '''
 
         if your_edges:
