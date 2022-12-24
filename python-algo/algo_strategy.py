@@ -59,18 +59,25 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.test_call_edges(game_state)
         game_state.submit_turn()
 
-
-    """
-    NOTE: All the methods after this point are part of the sample starter-algo
-    strategy and can safely be replaced for your custom algo.
-    """
-
-    def test_call_edges(self, game_state):
+    def get_edges(self, game_state, your_edges: bool = False):
         '''
-        A function to practice calling the edges directly from the gamestate
+        Function to get each player's edges
+
+            parameters:
+                self
+                game_state: current game state
+                player: bool that is true if you want your own edges and false if you want your opponent's
+
+            returns:
+                List of edge coordinates
         '''
-        friendly_edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
-        gamelib.debug_write(friendly_edges)
+
+        if your_edges:
+            edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
+        else:
+            edges = game_state.game_map.get_edge_locations(game_state.game_map.TOP_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.TOP_RIGHT)
+
+        return edges
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
