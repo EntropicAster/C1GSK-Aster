@@ -69,8 +69,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         '''
         A function to practice calling the edges directly from the gamestate
         '''
-        my_edges = gamelib.game_map.get_edge_locations(2) + gamelib.game_map.get_edge_locations(3)
-        gamelib.debug_write(my_edges)
+        friendly_edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
+        gamelib.debug_write(friendly_edges)
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
