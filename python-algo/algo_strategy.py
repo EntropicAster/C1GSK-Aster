@@ -91,7 +91,31 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     # Finish this function later
 
-
+    def enemy_least_damage(self, game_state):
+        damages = []
+        possible_starts = []
+        for start in enemy_edges:
+            if not game_state.contains_stationary_unit(start):
+                possible_starts.append(start)
+        for location in possible_starts:
+            path = game_state.find_path_to_edge(location)
+            paticular_damage = 0
+            for path_location in path:
+                for attacker in game_state.get_attackers(path_location, 1):
+                    if (attacker.attackRange == 2.5):
+                        paticular_damage += 5
+                    if (attacker.attackRange == 3.5):
+                        paticular_damage += 15
+            damages.append(paticular_damage)
+        to_be_removed = []
+        start = 0
+        while (start < len(possible_starts)):
+            if not damages[start] == min(damages):
+                possible_starts.pop(start)
+                damages.pop(start)
+                start -= 1
+            start += 1
+        return possible_starts
 
     def get_edges(self, game_state, your_edges: bool = True):
         '''
