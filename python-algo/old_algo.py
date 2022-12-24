@@ -83,23 +83,27 @@ class AlgoStrategy(gamelib.AlgoCore):
         for start in likely_starts:
             for location in game_state.find_path_to_edge(start):
                 vuln_locations.append(location)
-        open_locations = []
-        necessary = []
+
         open_edges = []
         gamelib.debug_write("Filtering my_edges")
         for start in my_edges:
             if game_state.can_spawn(SCOUT, start):
                 open_edges.append(start)
+
         gamelib.debug_write("Preventing blocking")
+        necessary = []
         for start in open_edges:
             for local in game_state.find_path_to_edge((self.least_damage_spawn_location(game_state, open_edges))):
                 necessary.append(locals)
         gamelib.debug_write("Assembing my board")
+
+        open_locations = []
         for x in range(28):
             for y in range(14):
                 if game_state.can_spawn(TURRET, [x, y]):
                     if necessary.count([x,y]) == 0:
                         open_locations.append([x, y])
+
         damage_outputs = []
         gamelib.debug_write("Calculating damages")
         for location in open_locations:
@@ -108,6 +112,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                 if (self.is_in_range(location, target, 2.5)):
                     damage_outputs[len(damage_outputs) - 1] += 5
         gamelib.debug_write("Placing towers")
+
         while game_state.get_resource(SP) > 1 and len(open_locations) > 0:
             game_state.attempt_spawn(TURRET, open_locations[damage_outputs.index(max(damage_outputs))])
             damage_outputs.remove(max(damage_outputs))

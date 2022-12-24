@@ -83,11 +83,17 @@ class AlgoStrategy(gamelib.AlgoCore):
         '''
 
         vulnerable_locations = []
-        likely_starts = self.least_damage_spawn(game_state)
+        likely_starts = self.least_damage_spawn(game_state, myself=False)
 
         for start in likely_starts:
             for location in game_state.find_path_to_edge(start):
                 vulnerable_locations.append(location)
+
+        open_edges = []
+        gamelib.debug_write("Filtering my_edges")
+        for start in self.get_edges(game_state):
+            if game_state.can_spawn(SCOUT, start):
+                open_edges.append(start)
 
     # Finish this function later
 
