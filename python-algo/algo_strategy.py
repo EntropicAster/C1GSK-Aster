@@ -54,12 +54,13 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         game_state = gamelib.GameState(self.config, turn_state)
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
-        #game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
+        # game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        self.test_call_edges(game_state)
+        self.get_edges(game_state, your_edges=True)
+        self.get_edges(game_state, your_edges=False)
         game_state.submit_turn()
 
-    def get_edges(self, game_state, your_edges: bool = False):
+    def get_edges(self, game_state, your_edges: bool = True):
         '''
         Function to get each player's edges
 
@@ -78,6 +79,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             edges = game_state.game_map.get_edge_locations(game_state.game_map.TOP_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.TOP_RIGHT)
 
         return edges
+
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
