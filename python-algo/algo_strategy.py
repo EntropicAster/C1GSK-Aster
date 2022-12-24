@@ -95,20 +95,20 @@ class AlgoStrategy(gamelib.AlgoCore):
         damages = []
         possible_starts = []
 
-        for start in get_edges(game_state, your_edges = False):
+        for start in self.get_edges(game_state, your_edges = False):
             if not game_state.contains_stationary_unit(start):
                 possible_starts.append(start)
 
         for location in possible_starts:
             path = game_state.find_path_to_edge(location)
-            paticular_damage = 0
+            particular_damage = 0
             for path_location in path:
                 for attacker in game_state.get_attackers(path_location, 1):
-                    if (attacker.attackRange == 2.5):
-                        paticular_damage += 5
-                    if (attacker.attackRange == 3.5):
-                        paticular_damage += 15
-            damages.append(paticular_damage)
+                    if attacker.attackRange == 2.5:
+                        particular_damage += 5
+                    if attacker.attackRange == 3.5:
+                        particular_damage += 15
+            damages.append(particular_damage)
 
         minimum_damage = min(damages)
         best_starts = []
