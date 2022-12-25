@@ -109,10 +109,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         for location in open_locations:
             damage_outputs.append(0)
             for target in vuln_locations:
-                if (self.is_in_range(location, target, 2.5)):
-                    damage_outputs[len(damage_outputs) - 1] += 5
-        gamelib.debug_write("Placing towers")
+                if self.is_in_range(location, target, 2.5):
+                    damage_outputs[-1] += 5
 
+        gamelib.debug_write("Placing towers")
         while game_state.get_resource(SP) > 1 and len(open_locations) > 0:
             game_state.attempt_spawn(TURRET, open_locations[damage_outputs.index(max(damage_outputs))])
             damage_outputs.remove(max(damage_outputs))
@@ -150,10 +150,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         damage_taken = 0
         return [chosen, damage_taken]
 
-    def is_in_range(self, l1, l2, rang):
-        if (math.sqrt((l1[0] - l2[0]) * (l1[0] - l2[0]) + (l1[1] - l2[1]) * (l1[1] - l2[1])) < rang):
-            return True
-        return False
+    def is_in_range(self, l1, l2, scalar_range):
+        x_distance = (l1[0] - l2[0])
+        y_distance = (l1[1] - l2[1])
+        return x_distance**2 + y_distance**2 < scalar_range**2
 
     def enemy_least_damage(self, game_state):
         damages = []
