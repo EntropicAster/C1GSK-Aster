@@ -63,7 +63,7 @@ class AlgoStrategy(gamelib.AlgoCore):
     def opening(self, game_state, game_map):
         not_furtherest_in_territory_edges = self.get_edges(game_state)
         not_furtherest_in_territory_edges.pop(0)
-        not_furtherest_in_territory_edges.pop(game_map.HALF_ARENA)
+        not_furtherest_in_territory_edges.pop(game_map.HALF_ARENA - 1)
         for edge_location in not_furtherest_in_territory_edges:
             game_state.attempt_spawn(WALL, edge_location)
 
@@ -90,13 +90,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
 
         vulnerable_locations = []
-        likely_starts = self.least_damage_spawn(game_state, myself=False)
+        likely_starts, _ = self.least_damage_spawn(game_state, myself=False)
 
         for start in likely_starts:
             for location in game_state.find_path_to_edge(start):
                 vulnerable_locations.append(location)
 
-        best_attack_path = game_state.find_path_to_edge(self.least_damage_spawn(game_state)[0])
+        best_spawns, _ = self.least_damage_spawn(game_state)
+        best_attack_path = game_state.find_path_to_edge(best_spawns[0])
 
         possible_turret_locations = []
         for x in range(game_map.ARENA_SIZE):
@@ -121,13 +122,13 @@ class AlgoStrategy(gamelib.AlgoCore):
             possible_turret_locations.pop(damage_outputs.index(max_damage))
             damage_outputs.remove(max_damage)
 
-    def is_in_range(self, l1: list, l2: list, scalar_range: int):
+    def is_in_range(self, l1: list, l2: list, scalar_range: float):
         """
 
          Params:
             L1 (list): first set of coordinates
             L2 (list): second set of coordinates
-            scalar_range (int): max allowable distance
+            scalar_range (float): max allowable distance
 
         Returns: if L1 is in range of L2, or vise versa
 
@@ -143,9 +144,16 @@ class AlgoStrategy(gamelib.AlgoCore):
             if game_state.can_spawn(SCOUT, start):
                 open_edges.append(start)
 
-        chosen_location = self.least_damage_spawn(game_state, open_edges)
-        while game_state.get_resource(MP) > 0:
-            game_state.attempt_spawn(SCOUT, chosen_location)
+        chosen_locations, damage_taken = self.least_damage_spawn(game_state, open_edges)
+        chosen_location = chosen_locations[0]
+        scout_hp = 15
+        if game_state.find_path_to_edge(chosen_location)[-1] in self.get_edges(game_state, myself=False):
+            if int(game_state.get_resource(MP))*scout_hp > damage_taken:
+                while game_state.get_resource(MP) >= 1:
+                    game_state.attempt_spawn(SCOUT, chosen_location)
+        else:
+            while game_state.get_resource(MP) >= 2:
+                game_state.attempt_spawn(DEMOLISHER, chosen_location)
 
     def least_damage_spawn(self, game_state, myself: bool = True):
         possible_starts = []
@@ -154,25 +162,28 @@ class AlgoStrategy(gamelib.AlgoCore):
                 possible_starts.append(start)
 
         damages = []
+        gamelib.debug_write(possible_starts)
         for location in possible_starts:
             path = game_state.find_path_to_edge(location)
-            particular_damage = 0
-            for path_location in path:
-                for attacker in game_state.get_attackers(path_location, not myself):
-                    if attacker.attackRange == 2.5:
-                        particular_damage += 5
-                    if attacker.attackRange == 3.5:
-                        particular_damage += 15
-            damages.append(particular_damage)
+            gamelib.debug_write(path[-1])
+            if (path[-1][1] >= 14 and myself) or (path[-1][1] < 14 and not myself):
+                particular_damage = 0
+                for path_location in path:
+                    for attacker in game_state.get_attackers(path_location, not myself):
+                        if attacker.attackRange == 2.5:
+                            particular_damage += 5
+                        if attacker.attackRange == 3.5:
+                            particular_damage += 15
+                damages.append((particular_damage, location))
 
-        minimum_damage = min(damages)
+        min_damage = min(damages)[0]
         best_starts = []
+        for pair in damages:
+            if pair[0] == min_damage:
+                best_starts.append(pair[1])
 
-        for index, value in enumerate(damages):
-            if value == minimum_damage:
-                best_starts.append(possible_starts[index])
+        return best_starts, min_damage
 
-        return best_starts
 
     def get_edges(self, game_state, myself: bool = True):
         """
