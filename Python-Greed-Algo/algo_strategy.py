@@ -152,7 +152,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                 while game_state.get_resource(MP) >= 1:
                     game_state.attempt_spawn(SCOUT, chosen_location)
         else:
-            while game_state.get_resource(MP) >= 2:
+            while game_state.get_resource(MP) >= 3:
                 game_state.attempt_spawn(DEMOLISHER, chosen_location)
 
     def least_damage_spawn(self, game_state, myself: bool = True):
@@ -162,10 +162,8 @@ class AlgoStrategy(gamelib.AlgoCore):
                 possible_starts.append(start)
 
         damages = []
-        gamelib.debug_write(possible_starts)
         for location in possible_starts:
             path = game_state.find_path_to_edge(location)
-            gamelib.debug_write(path[-1])
             if (path[-1][1] >= 14 and myself) or (path[-1][1] < 14 and not myself):
                 particular_damage = 0
                 for path_location in path:
@@ -176,6 +174,8 @@ class AlgoStrategy(gamelib.AlgoCore):
                             particular_damage += 15
                 damages.append((particular_damage, location))
 
+        if len(damages) == 0:
+            return [possible_starts[0]], -1
         min_damage = min(damages)[0]
         best_starts = []
         for pair in damages:
@@ -183,7 +183,6 @@ class AlgoStrategy(gamelib.AlgoCore):
                 best_starts.append(pair[1])
 
         return best_starts, min_damage
-
 
     def get_edges(self, game_state, myself: bool = True):
         """
