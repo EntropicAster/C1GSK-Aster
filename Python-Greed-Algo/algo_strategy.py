@@ -1,5 +1,6 @@
 import gamelib
 import random
+import copy
 import math
 import warnings
 from sys import maxsize
@@ -90,7 +91,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
 
         vulnerable_locations = []
-        likely_starts, _ = self.least_damage_spawn(game_state, myself=False)
+        likely_starts, unaltered_damage = self.least_damage_spawn(game_state, myself=False)
 
         for start in likely_starts:
             for location in game_state.find_path_to_edge(start):
@@ -99,43 +100,40 @@ class AlgoStrategy(gamelib.AlgoCore):
         best_spawns, _ = self.least_damage_spawn(game_state)
         best_attack_path = game_state.find_path_to_edge(best_spawns[0])
 
-        possible_turret_locations = []
-        for x in range(game_map.ARENA_SIZE):
-            for y in range(game_map.HALF_ARENA):
-                if game_state.can_spawn(TURRET, [x, y]):
-                    if best_attack_path.count([x, y]) == 0:
-                        possible_turret_locations.append([x, y])
+        while game_state.get_resource(SP) >= 2:
+            defensive_options = []
+            for x in range(game_map.ARENA_SIZE):
+                for y in range(game_map.HALF_ARENA):
+                    if not [x, y] in best_attack_path:
+                        for tower in [WALL, TURRET]:
+                            if game_state.can_spawn(tower, [x, y]):
+                                hypothetical_game_state = copy.deepcopy(game_state)
+                                hypothetical_game_state.game_map.add_unit(tower, [x, y])
+                                damage_added = self.get_path_damage(hypothetical_game_state, game_state.find_path_to_edge([x, y]), myself=False) - unaltered_damage
+                                if tower == WALL:
+                                    damage_added *= 2
+                                defensive_options.append((damage_added, tower, [x, y]))
+                                # gamelib.debug_write("Adding option " + tower)
 
-        damage_outputs = []
-        turret_attack_range = 2.5
-        turret_attack_damage = 5
-        gamelib.debug_write("Calculating damages")
-        for location in possible_turret_locations:
-            damage_outputs.append(0)
-            for target in vulnerable_locations:
-                if self.is_in_range(location, target, turret_attack_range):
-                    damage_outputs[-1] += turret_attack_damage
+                        if TURRET == game_state.game_map[x, y]:
+                            hypothetical_game_state = copy.deepcopy(game_state)
+                            hypothetical_game_state.game_map[x, y].upgrade()
+                            damage_added = self.get_path_damage(hypothetical_game_state,
+                                                                game_state.find_path_to_edge([x, y]),
+                                                                myself=False) - unaltered_damage
+                            defensive_options.append(damage_added, "upgrade", [x, y])
+                            # gamelib.debug_write("Adding option")
 
-        while game_state.get_resource(SP) > 1 and len(possible_turret_locations) > 0:
-            max_damage = max(damage_outputs)
-            game_state.attempt_spawn(TURRET, possible_turret_locations[damage_outputs.index(max_damage)])
-            possible_turret_locations.pop(damage_outputs.index(max_damage))
-            damage_outputs.remove(max_damage)
+            if not defensive_options:
+                break
+            best_option = max(defensive_options)
 
-    def is_in_range(self, l1: list, l2: list, scalar_range: float):
-        """
-
-         Params:
-            L1 (list): first set of coordinates
-            L2 (list): second set of coordinates
-            scalar_range (float): max allowable distance
-
-        Returns: if L1 is in range of L2, or vise versa
-
-        """
-        x_distance = (l1[0] - l2[0])
-        y_distance = (l1[1] - l2[1])
-        return x_distance**2 + y_distance**2 < scalar_range**2
+            if best_option == "upgrade":
+                game_state.attempt_upgrade(best_option[2])
+                gamelib.debug_write("upgrading")
+            else:
+                game_state.attempt_spawn(best_option[1], best_option[2])
+                gamelib.debug_write("placing " + best_option[1])
 
     def build_attack(self, game_state):
         open_edges = []
@@ -165,13 +163,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         for location in possible_starts:
             path = game_state.find_path_to_edge(location)
             if (path[-1][1] >= 14 and myself) or (path[-1][1] < 14 and not myself):
-                particular_damage = 0
-                for path_location in path:
-                    for attacker in game_state.get_attackers(path_location, not myself):
-                        if attacker.attackRange == 2.5:
-                            particular_damage += 5
-                        if attacker.attackRange == 3.5:
-                            particular_damage += 15
+                particular_damage = self.get_path_damage(game_state, path, myself)
                 damages.append((particular_damage, location))
 
         if len(damages) == 0:
@@ -183,6 +175,16 @@ class AlgoStrategy(gamelib.AlgoCore):
                 best_starts.append(pair[1])
 
         return best_starts, min_damage
+
+    def get_path_damage(self, game_state, path, myself: bool = True):
+        particular_damage = 0
+        for path_location in path:
+            for attacker in game_state.get_attackers(path_location, not myself):
+                if attacker.attackRange == 2.5:
+                    particular_damage += 5
+                if attacker.attackRange == 3.5:
+                    particular_damage += 15
+        return particular_damage
 
     def get_edges(self, game_state, myself: bool = True):
         """
